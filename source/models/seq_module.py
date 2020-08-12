@@ -27,13 +27,16 @@ class ACE(Sequence):
 
     def forward(self, input, label):
 
-        self.bs,self.h,self.w,_ = input.size()
+        self.bs,self.h,self.w,_ = input.size() # input-->50*7*7*27,50是batch_size,27是类别数（包含空格）
         T_ = self.h*self.w
 
-        input = input.view(self.bs,T_,-1)
+
+        input = input.view(self.bs,T_,-1)  # 展平为1维 50*49*27
         input = input + 1e-10
 
         self.softmax = input
+        #lable : 50 * 27
+        # label[:,0] ---->第一维是样本数，第二维是每个类别的数量，第二维的第一个数用下面公式计算之后代表空格的个数
         label[:,0] = T_ - label[:,0]
         self.label = label
 

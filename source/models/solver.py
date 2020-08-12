@@ -38,10 +38,13 @@ class seq_solver(solver):
 		self.model.train()
 		loss_aver = 0
 		if self.scheduler is not None:
+			# change lr
 			self.scheduler.step()
 			print('learning_rate: ', self.scheduler.get_lr())	
 		for it, sample_batched in enumerate(self.lmdb_train):
+			# bs * 1 * 100 * 100
 			inputs = sample_batched['image'].squeeze(0)
+			# 50 * 27
 			labels = sample_batched['label'].squeeze(0)
 
 			inputs = Variable(inputs.cuda())
@@ -49,9 +52,11 @@ class seq_solver(solver):
 			self.optimizer.zero_grad()
 			loss.backward()
 			loss = loss.data.item()
+			# clipping gradient : grad < a -> grad = a
 			l2_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(),10)
 
 			if not np.isnan(l2_norm):
+				# update parameters
 				self.optimizer.step()
 			else:
 				print('l2_norm: ', l2_norm)
@@ -95,8 +100,8 @@ class seq_solver(solver):
 
 			if it == len(self.lmdb_test) -1:
 				recall = float(correct_count) / len_total
-				precision = correct_count / (pre_total+0.000001)	
-				print('Test : %10s Epoch: %3d it: %6d, loss: %.4f, len : %4d, recall: %.4f, precision: %.4f' % 
+				precision = correct_count / (pre_total+0.000001)
+				print('Test : %10s Epoch: %3d it: %6d, loss: %.4f, len : %4d, recall: %.4f, precision: %.4f' %
 							(timeSince(self.start), ep, it, loss_aver, len_total, recall, precision))	
 
 
